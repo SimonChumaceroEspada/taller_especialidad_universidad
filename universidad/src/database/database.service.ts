@@ -185,7 +185,7 @@ export class ${entityName}Module {}
     const moduleDir = path.join(__dirname, '..', 'modules');
     const modulePath = path.join(moduleDir, `${tableName}.module.ts`);
 
-    // Crear el directorio si no existe
+    // Crear directorio si no existe
     if (!fs.existsSync(moduleDir)) {
       fs.mkdirSync(moduleDir, { recursive: true });
     }
@@ -194,24 +194,35 @@ export class ${entityName}Module {}
   }
 
   private async updateAppModule(tables: string[]) {
-    const appModulePath = path.join(__dirname, '..', 'app.module.ts');
+    const appModulePath = path.join('src', 'app.module.ts');
     let appModuleContent = fs.readFileSync(appModulePath, 'utf8');
-
+  
     const importStatements = tables.map(table => {
       const entityName = this.capitalize(table);
-      return `import { ${entityName}Module } from './modules/${table}.module';`;
+      return `import { ${entityName}Module } from '../dist/modules/${table}.module';`;
     }).join('\n');
-
+  
     const moduleImports = tables.map(table => {
       const entityName = this.capitalize(table);
       return `${entityName}Module`;
-    }).join(', ');
-
+    });
+  
+    // Agregar nuevas declaraciones de importación sin eliminar las existentes
+    const importStatementsRegex = /import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?/g;
+    const existingImportStatements = appModuleContent.match(importStatementsRegex) || [];
+    const newImportStatements = Array.from(new Set([...existingImportStatements, ...importStatements.split('\n')])).join('\n');
+    appModuleContent = appModuleContent.replace(/^(import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?)/gm, '').trim();
+    appModuleContent = `${newImportStatements}\n\n${appModuleContent}`;
+  
+    // Agregar nuevos imports sin eliminar los existentes
     const importRegex = /(imports:\s*\[)([\s\S]*?)(\])/;
-    const newImports = `$1\n    ${moduleImports},\n$3`;
-
-    appModuleContent = `${importStatements}\n\n${appModuleContent.replace(importRegex, newImports)}`;
-
+    const existingImportsMatch = appModuleContent.match(importRegex);
+    if (existingImportsMatch) {
+      const existingImports = existingImportsMatch[2].split(',').map(i => i.trim()).filter(i => i);
+      const newImports = Array.from(new Set([...existingImports, ...moduleImports])).join(', ');
+      appModuleContent = appModuleContent.replace(importRegex, `$1\n    ${newImports},\n$3`);
+    }
+  
     fs.writeFileSync(appModulePath, appModuleContent);
   }
 
