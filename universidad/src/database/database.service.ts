@@ -9,7 +9,7 @@ export class DatabaseService {
   constructor(
     @InjectEntityManager()
     private entityManager: EntityManager,
-  ) {}
+  ) { }
 
   async getAllTables(): Promise<string[]> {
     const query = `
@@ -19,7 +19,7 @@ export class DatabaseService {
       AND table_type = 'BASE TABLE'
       ORDER BY table_name ASC
     `;
-    
+
     const tables = await this.entityManager.query(query);
     return tables.map(table => table.table_name);
   }
@@ -105,10 +105,10 @@ export class ${entityName}Controller {
     return this.${tableName}Service.update(id, updateDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.${tableName}Service.remove(id);
-  }
+  remove(id: string): Promise<void> {
+  return this.${tableName}Repository.delete(id).then(() => {});
+}
+
 }
     `;
     const controllerDir = path.join(__dirname, '..', 'controllers');
@@ -196,24 +196,29 @@ export class ${entityName}Module {}
   private async updateAppModule(tables: string[]) {
     const appModulePath = path.join('src', 'app.module.ts');
     let appModuleContent = fs.readFileSync(appModulePath, 'utf8');
-  
+
     const importStatements = tables.map(table => {
       const entityName = this.capitalize(table);
-      return `import { ${entityName}Module } from '../dist/modules/${table}.module';`;
+      return `import { ${entityName}Module } from '../dist/modules/${table}.module';\nimport { ${entityName} } from '../dist/entities/${table}.entity';`;
     }).join('\n');
-  
+
     const moduleImports = tables.map(table => {
       const entityName = this.capitalize(table);
       return `${entityName}Module`;
     });
-  
+
+    const entityImports = tables.map(table => {
+      const entityName = this.capitalize(table);
+      return `${entityName}`;
+    });
+
     // Agregar nuevas declaraciones de importación sin eliminar las existentes
     const importStatementsRegex = /import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?/g;
     const existingImportStatements = appModuleContent.match(importStatementsRegex) || [];
     const newImportStatements = Array.from(new Set([...existingImportStatements, ...importStatements.split('\n')])).join('\n');
     appModuleContent = appModuleContent.replace(/^(import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?)/gm, '').trim();
     appModuleContent = `${newImportStatements}\n\n${appModuleContent}`;
-  
+
     // Agregar nuevos imports sin eliminar los existentes
     const importRegex = /(imports:\s*\[)([\s\S]*?)(\])/;
     const existingImportsMatch = appModuleContent.match(importRegex);
@@ -222,7 +227,24 @@ export class ${entityName}Module {}
       const newImports = Array.from(new Set([...existingImports, ...moduleImports])).join(', ');
       appModuleContent = appModuleContent.replace(importRegex, `$1\n    ${newImports},\n$3`);
     }
-  
+
+    // Agregar nuevas entidades sin eliminar las existentes
+    const entitiesRegex = /(entities:\s*\[)([\s\S]*?)(\])/;
+    const existingEntitiesMatch = appModuleContent.match(entitiesRegex);
+    if (existingEntitiesMatch) {
+      const existingEntities = existingEntitiesMatch[2].split(',').map(i => i.trim()).filter(i => i);
+      const newEntities = Array.from(new Set([...existingEntities, ...entityImports])).join(', ');
+      appModuleContent = appModuleContent.replace(entitiesRegex, `$1\n    ${newEntities},\n$3`);
+    } else {
+      // Si no hay una sección de entidades, agregarla
+      const typeOrmModuleRegex = /TypeOrmModule\.forRoot\(\{([\s\S]*?)\}\)/;
+      appModuleContent = appModuleContent.replace(typeOrmModuleRegex, (match, p1) => {
+        // Eliminar cualquier coma adicional al final de p1
+        const cleanedP1 = p1.replace(/,\s*$/, '');
+        return `TypeOrmModule.forRoot({${cleanedP1},\n  entities: [${entityImports.join(', ')}]})`;
+      });
+    }
+
     fs.writeFileSync(appModulePath, appModuleContent);
   }
 
@@ -242,5 +264,17 @@ export class ${entityName}Module {}
 
   private capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  async createRecord(tableName: string, record: any) {
+    return await this.entityManager.insert(tableName, record);
+  }
+
+  async updateRecord(tableName: string, id: string, record: any) {
+    return await this.entityManager.update(tableName, id, record);
+  }
+
+  async deleteRecord(tableName: string, id: string) {
+    return await this.entityManager.delete(tableName, id);
   }
 }

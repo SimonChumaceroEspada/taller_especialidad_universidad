@@ -15,6 +15,8 @@ export class AuthService {
       return {
         access_token: this.jwtService.sign(payload),
       };
+      // muestra el token
+      console.log(this.jwtService.sign(payload));
     }
     return null;
   }
