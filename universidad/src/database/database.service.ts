@@ -68,7 +68,7 @@ export class ${entityName} {
   `).join('')}
 }
     `;
-    const entityDir = path.join(__dirname, '..', 'entities');
+    const entityDir = path.join(process.cwd(), 'src', 'entities');
     const entityPath = path.join(entityDir, `${tableName}.entity.ts`);
 
     // Crear el directorio si no existe
@@ -104,14 +104,9 @@ export class ${entityName}Controller {
   update(@Param('id') id: string, @Body() updateDto: ${entityName}) {
     return this.${tableName}Service.update(id, updateDto);
   }
-
-  remove(id: string): Promise<void> {
-  return this.${tableName}Repository.delete(id).then(() => {});
-}
-
 }
     `;
-    const controllerDir = path.join(__dirname, '..', 'controllers');
+    const controllerDir = path.join(process.cwd(), 'src', 'controllers');
     const controllerPath = path.join(controllerDir, `${tableName}.controller.ts`);
 
     // Crear el directorio si no existe
@@ -149,13 +144,9 @@ export class ${entityName}Service {
   update(id: string, updateDto: ${entityName}): Promise<${entityName}> {
     return this.${tableName}Repository.save({ ...updateDto, id: Number(id) });
   }
-
-  remove(id: string): Promise<void> {
-    return this.${tableName}Repository.delete(id).then(() => {});
-  }
 }
     `;
-    const serviceDir = path.join(__dirname, '..', 'services');
+    const serviceDir = path.join(process.cwd(), 'src', 'services');
     const servicePath = path.join(serviceDir, `${tableName}.service.ts`);
 
     // Crear el directorio si no existe
@@ -182,7 +173,7 @@ import { ${entityName}Controller } from '../controllers/${tableName}.controller'
 })
 export class ${entityName}Module {}
     `;
-    const moduleDir = path.join(__dirname, '..', 'modules');
+    const moduleDir = path.join(process.cwd(), 'src', 'modules');
     const modulePath = path.join(moduleDir, `${tableName}.module.ts`);
 
     // Crear directorio si no existe
@@ -199,7 +190,7 @@ export class ${entityName}Module {}
 
     const importStatements = tables.map(table => {
       const entityName = this.capitalize(table);
-      return `import { ${entityName}Module } from '../dist/modules/${table}.module';\nimport { ${entityName} } from '../dist/entities/${table}.entity';`;
+      return `import { ${entityName}Module } from '../src/modules/${table}.module';\nimport { ${entityName} } from '../src/entities/${table}.entity';`;
     }).join('\n');
 
     const moduleImports = tables.map(table => {
@@ -270,9 +261,14 @@ export class ${entityName}Module {}
     return await this.entityManager.insert(tableName, record);
   }
 
-  async updateRecord(tableName: string, id: string, record: any) {
-    return await this.entityManager.update(tableName, id, record);
+    async updateRecord(tableName: string, id: string, record: any) {
+    console.log("llegue al updateRecord");
+    console.log(tableName, id, record);
+    const repository = this.entityManager.getRepository(tableName);
+    return await repository.update({ id_tipo_ambiente: Number(id) }, record);
   }
+
+  
 
   async deleteRecord(tableName: string, id: string) {
     return await this.entityManager.delete(tableName, id);
