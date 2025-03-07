@@ -3,9 +3,14 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Tipos_ambientes } from '../entities/tipos_ambientes.entity'; // Importación directa
 
 @Injectable()
 export class DatabaseService {
+
+  private entityMap = {
+    'tipos_ambientes': Tipos_ambientes
+  };
   constructor(
     @InjectEntityManager()
     private entityManager: EntityManager,
@@ -261,14 +266,32 @@ export class ${entityName}Module {}
     return await this.entityManager.insert(tableName, record);
   }
 
-    async updateRecord(tableName: string, id: string, record: any) {
+  async updateRecord(tableName: string, id: string, record: any) {
     console.log("llegue al updateRecord");
     console.log(tableName, id, record);
-    const repository = this.entityManager.getRepository(tableName);
-    return await repository.update({ id_tipo_ambiente: Number(id) }, record);
+
+    try {
+      // Buscar la entidad en el mapa
+      const EntityClass = this.entityMap[tableName];
+
+      if (!EntityClass) {
+        throw new Error(`Entity for table ${tableName} not found`);
+      }
+
+      const repository = this.entityManager.getRepository(EntityClass);
+      return await repository.update({ id_tipo_ambiente: Number(id) }, record);
+    } catch (error) {
+      console.error('Error in updateRecord:', error);
+      throw error;
+    }
   }
 
-  
+  // Método para registrar nuevas entidades dinámicamente
+  registerEntity(tableName: string, EntityClass: any) {
+    this.entityMap[tableName] = EntityClass;
+  }
+
+
 
   async deleteRecord(tableName: string, id: string) {
     return await this.entityManager.delete(tableName, id);
