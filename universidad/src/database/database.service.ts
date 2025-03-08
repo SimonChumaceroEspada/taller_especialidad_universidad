@@ -4,6 +4,7 @@ import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity'; // Importación directa
+import { DatabaseModule } from './database.module';
 
 @Injectable()
 export class DatabaseService {
@@ -53,6 +54,7 @@ export class DatabaseService {
     }
     // Actualizar AppModule con los nuevos módulos generados
     await this.updateAppModule(tables);
+    await this.updateDatabaseModule(tables);
     return { message: 'Operaciones CRUD creadas con éxito' };
   }
 
@@ -242,6 +244,58 @@ export class ${entityName}Module {}
     }
 
     fs.writeFileSync(appModulePath, appModuleContent);
+  }
+
+  private async updateDatabaseModule(tables: string[]) {
+    const databaseModulePath = path.join('src', 'database', 'database.module.ts');
+    let databaseModuleContent = fs.readFileSync(databaseModulePath, 'utf8');
+
+    const importStatements = tables.map(table => {
+      const entityName = this.capitalize(table);
+      return `import { ${entityName} } from '../entities/${table}.entity';\nimport { ${entityName}Service } from '../services/${table}.service';\nimport { ${entityName}Controller } from '../controllers/${table}.controller';`;
+    }).join('\n');
+
+    const moduleImports = tables.map(table => {
+      const entityName = this.capitalize(table);
+      return `${entityName}`;
+    });
+
+    const serviceProviders = tables.map(table => {
+      const entityName = this.capitalize(table);
+      return `${entityName}Service`;
+    });
+
+    const controllerProviders = tables.map(table => {
+      const entityName = this.capitalize(table);
+      return `${entityName}Controller`;
+    });
+
+    // Add new import statements without removing existing ones
+    const importStatementsRegex = /import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?/g;
+    const existingImportStatements = databaseModuleContent.match(importStatementsRegex) || [];
+    const newImportStatements = Array.from(new Set([...existingImportStatements, ...importStatements.split('\n')])).join('\n');
+    databaseModuleContent = databaseModuleContent.replace(/^(import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?)/gm, '').trim();
+    databaseModuleContent = `${newImportStatements}\n\n${databaseModuleContent}`;
+
+    // Add new imports without removing existing ones
+    const importRegex = /(imports:\s*\[)([\s\S]*?)(\])/;
+    const existingImportsMatch = databaseModuleContent.match(importRegex);
+    if (existingImportsMatch) {
+      const existingImports = existingImportsMatch[2].split(',').map(i => i.trim()).filter(i => i);
+      const newImports = Array.from(new Set([...existingImports, ...moduleImports])).join(', ');
+      databaseModuleContent = databaseModuleContent.replace(importRegex, `$1\n    ${newImports},\n$3`);
+    }
+
+    // Add new providers without removing existing ones
+    const providersRegex = /(providers:\s*\[)([\s\S]*?)(\])/;
+    const existingProvidersMatch = databaseModuleContent.match(providersRegex);
+    if (existingProvidersMatch) {
+      const existingProviders = existingProvidersMatch[2].split(',').map(i => i.trim()).filter(i => i);
+      const newProviders = Array.from(new Set([...existingProviders, ...serviceProviders, ...controllerProviders])).join(', ');
+      databaseModuleContent = databaseModuleContent.replace(providersRegex, `$1\n    ${newProviders},\n$3`);
+    }
+
+    fs.writeFileSync(databaseModulePath, databaseModuleContent);
   }
 
   private mapDataType(dataType: string): string {

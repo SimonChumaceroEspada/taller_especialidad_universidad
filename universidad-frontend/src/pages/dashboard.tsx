@@ -140,46 +140,6 @@ export default function Dashboard() {
     }
   };
 
-  // const handleEditRecord = async () => {
-  //   //setEditingRecord(editingRecord-1);
-  //   console.log("Editing Record:", editingRecord);
-  //   try {
-  //     if (!editingRecord || !editingRecord.id) {
-  //       console.log("ID del registro a editar:", editingRecord?.id);
-  //       // console.log("ID del registro a eliminar:", editingRecord);
-
-  //       alert("ID del registro no encontrado");
-  //       return;
-  //     }
-  //     const token = localStorage.getItem("access_token");
-  //     const url = `http://localhost:4000/database/tables/${selectedTable}/${editingRecord.id}`;
-  //     console.log("Intentando actualizar registro en:", url);
-  //     console.log("Datos del registro:", editingRecord);
-  //     const response = await axios.put(url, editingRecord, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //     console.log("Respuesta del servidor:", response);
-  //     setEditingRecord(null);
-  //     handleTableSelect(selectedTable);
-  //     alert("Registro editado con éxito");
-  //   } catch (error) {
-  //     console.error("Error editando registro:", error);
-  //     if (axios.isAxiosError(error)) {
-  //       console.error("Status:", error.response?.status);
-  //       console.error("Datos de respuesta:", error.response?.data);
-  //       alert(
-  //         "Error editando registro: " +
-  //           (error.response?.data?.message || "Desconocido")
-  //       );
-  //     } else {
-  //       alert("Error editando registro: " + (error as Error).message);
-  //     }
-  //   }
-  // };
-
   const handleEditRecord = async () => {
     console.log("Editing Record:", editingRecord);
     try {
@@ -227,22 +187,6 @@ export default function Dashboard() {
     }
   };
 
-  // const handleDeleteRecord = async (id: number) => {
-  //   console.log("Intentando eliminar ID:", id);
-  //   if (!id) {
-  //     console.error("ID no válido:", id);
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await axios.delete(
-  //       `http://localhost:4000/database/tables/tipos_ambientes/${id}`
-  //     );
-  //     console.log("Registro eliminado:", response.data);
-  //   } catch (error) {
-  //     console.error("Error eliminando registro:", error);
-  //   }
-  // };
 
   const handleDeleteRecord = async (record: any) => {
     console.log("Intentando eliminar registro:", record);
