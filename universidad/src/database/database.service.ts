@@ -4,13 +4,15 @@ import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity'; // Importación directa
+import { Universidades } from '../entities/universidades.entity'; // Importación directa
 import { DatabaseModule } from './database.module';
 
 @Injectable()
 export class DatabaseService {
 
   private entityMap = {
-    'tipos_ambientes': Tipos_ambientes
+    'tipos_ambientes': Tipos_ambientes,
+    'universidades': Universidades, // Registro de la entidad Universidades
   };
   constructor(
     @InjectEntityManager()
@@ -62,15 +64,13 @@ export class DatabaseService {
     const columns = await this.getTableStructure(tableName);
     const entityName = this.capitalize(tableName);
     const entityContent = `
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn } from 'typeorm';
 
 @Entity('${tableName}')
 export class ${entityName} {
-  @PrimaryGeneratedColumn()
-  id: number;
 
   ${columns.map(column => `
-  @Column()
+  @PrimaryColumn()
   ${column.column_name}: ${this.mapDataType(column.data_type)};
   `).join('')}
 }
@@ -333,19 +333,44 @@ export class ${entityName}Module {}
       }
 
       const repository = this.entityManager.getRepository(EntityClass);
-      return await repository.update({ id_tipo_ambiente: Number(id) }, record);
+      const primaryColumn = await this.getPrimaryColumn(tableName);
+      return await repository.update({ [primaryColumn]: Number(id) }, record);
     } catch (error) {
       console.error('Error in updateRecord:', error);
       throw error;
     }
   }
 
+  private async getPrimaryColumn(tableName: string): Promise<string> {
+    const query = `
+      SELECT column_name
+      FROM information_schema.key_column_usage
+      WHERE table_name = '${tableName}' AND constraint_name = '${tableName}_pkey'
+    `;
+    const result = await this.entityManager.query(query);
+    if (result.length > 0) {
+      return result[0].column_name;
+    }
+
+    // Intentar obtener la columna primaria de otra manera si no se encuentra en key_column_usage
+    const primaryColumnQuery = `
+      SELECT a.attname
+      FROM pg_index i
+      JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+      WHERE i.indrelid = '${tableName}'::regclass AND i.indisprimary
+    `;
+    const primaryColumnResult = await this.entityManager.query(primaryColumnQuery);
+    if (primaryColumnResult.length > 0) {
+      return primaryColumnResult[0].attname;
+    }
+
+    throw new Error(`Primary column for table ${tableName} not found`);
+  }
+
   // Método para registrar nuevas entidades dinámicamente
   registerEntity(tableName: string, EntityClass: any) {
     this.entityMap[tableName] = EntityClass;
   }
-
-
 
   async deleteRecord(tableName: string, id: string) {
     return await this.entityManager.delete(tableName, id);
