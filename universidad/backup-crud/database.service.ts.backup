@@ -1,4 +1,4 @@
-
+import { Tramites_documentos } from '../entities/tramites_documentos.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
@@ -13,7 +13,9 @@ import { DatabaseModule } from './database.module';
 @Injectable()
 export class DatabaseService {
 
-  private entityMap = {
+  private entityMap = {'tipos_ambientes': Tipos_ambientes,
+    'universidades': Universidades,
+    'tramites_documentos': Tramites_documentos
   };
   constructor(
     @InjectEntityManager()

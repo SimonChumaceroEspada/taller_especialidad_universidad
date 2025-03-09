@@ -2,9 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
-import { Universidades } from './entities/universidades.entity';
-import { UniversidadesModule } from './modules/universidades.module';
-
 @Module({
   imports: [
     TypeOrmModule.forRoot({

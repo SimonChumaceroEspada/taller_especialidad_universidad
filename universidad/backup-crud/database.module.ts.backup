@@ -6,14 +6,16 @@ import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
 import { Universidades } from '../entities/universidades.entity';
 import { UniversidadesService } from '../services/universidades.service';
 import { UniversidadesController } from '../controllers/universidades.controller';
-
+import { Tramites_documentos } from '../entities/tramites_documentos.entity';
+import { Tramites_documentosService } from '../services/tramites_documentos.service';
+import { Tramites_documentosController } from '../controllers/tramites_documentos.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tipos_ambientes, Universidades
+    TypeOrmModule.forFeature([Tipos_ambientes, Universidades, Tramites_documentos,
 ])],
   providers: [
-    DatabaseService, UniversidadesService, UniversidadesController, Tramites_documentosService, Tramites_documentosController, SexosService, SexosController,
+    DatabaseService, UniversidadesService, UniversidadesController, Tramites_documentosService, Tramites_documentosController,
 ],
   controllers: [DatabaseController],
   exports: [DatabaseService],

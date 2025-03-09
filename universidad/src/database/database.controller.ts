@@ -19,6 +19,7 @@ export class DatabaseController {
 
   @Post('crud-operations')
   async handleCrudOperations(@Body() body: { tables: string[] }) {
+    console.log("llegue al crud operations");
     return await this.databaseService.createCrudOperations(body.tables);
   }
 
