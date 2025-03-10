@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('database')
 @UseGuards(JwtAuthGuard)
 export class DatabaseController {
-  constructor(private databaseService: DatabaseService) {}
+  constructor(private databaseService: DatabaseService) { }
 
   @Get('tables')
   async getTables() {
@@ -41,5 +41,11 @@ export class DatabaseController {
   @Post('restart')
   async restartApplication() {
     return this.databaseService.restartApplication();
+  }
+
+
+  @Get('health')
+  healthCheck() {
+    return { status: 'ok', timestamp: new Date().toISOString() };
   }
 }

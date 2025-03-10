@@ -77,13 +77,10 @@ export default function Dashboard() {
   const handleSelectAllChange = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-    const newSelectedTables = tables.reduce(
-      (acc, table) => {
-        acc[table] = newSelectAll;
-        return acc;
-      },
-      {} as { [key: string]: boolean }
-    );
+    const newSelectedTables = tables.reduce((acc, table) => {
+      acc[table] = newSelectAll;
+      return acc;
+    }, {} as { [key: string]: boolean });
     setSelectedTables(newSelectedTables);
   };
 
@@ -187,7 +184,6 @@ export default function Dashboard() {
     }
   };
 
-
   const handleDeleteRecord = async (record: any) => {
     console.log("Intentando eliminar registro:", record);
     try {
@@ -244,54 +240,73 @@ export default function Dashboard() {
           },
         }
       );
-      
+
       alert(response.data.message);
-      
+
       // Esperar 5 segundos y luego intentar reconectar
       setTimeout(() => {
         reconnectAfterRestart();
       }, 5000);
-      
     } catch (error) {
       console.error("Error al reiniciar la aplicación:", error);
       alert("Error al reiniciar la aplicación");
       setLoading(false);
     }
   };
-  
+
   // Función para reconectar después del reinicio
   const reconnectAfterRestart = async () => {
     let attempts = 0;
-    const maxAttempts = 10;
-    const attemptInterval = 2000; // 2 segundos entre intentos
-    
+    const maxAttempts = 20; // Más intentos
+    const attemptInterval = 3000; // Más tiempo entre intentos (3s)
+
     const tryReconnect = async () => {
       attempts++;
       try {
+        console.log(`Intento de reconexión ${attempts}/${maxAttempts}...`);
+
         // Intentar una solicitud simple para verificar si el servidor está activo
-        await axios.get("http://localhost:4000/health");
-        
+        const response = await axios.get("http://localhost:4000/health", {
+          timeout: 5000, // Añadir timeout
+        });
+
+        console.log("Respuesta recibida:", response.data);
+
         // Si llegamos aquí, el servidor está de vuelta
         console.log("Reconexión exitosa después del reinicio");
         setLoading(false);
         fetchTables(); // Refrescar los datos
-        
       } catch (error) {
-        console.log(`Intento de reconexión ${attempts}/${maxAttempts} fallido`);
-        
+        console.log(
+          `Intento de reconexión ${attempts}/${maxAttempts} fallido:`,
+          (error as Error).message
+        );
+
         if (attempts < maxAttempts) {
+          // Mostrar mensaje de espera
+          if (attempts % 3 === 0) {
+            // Cada 3 intentos
+            console.log(
+              `Esperando que el servidor vuelva a estar en línea (${attempts}/${maxAttempts})...`
+            );
+          }
+
           // Programar otro intento
           setTimeout(tryReconnect, attemptInterval);
         } else {
           // Demasiados intentos fallidos
           setLoading(false);
-          alert("No se pudo reconectar con el servidor después del reinicio. Por favor, actualice la página manualmente.");
+          alert(
+            "No se pudo reconectar con el servidor después del reinicio. Por favor, actualice la página manualmente o verifique los logs del servidor."
+          );
         }
       }
     };
-    
-    // Iniciar el primer intento
-    tryReconnect();
+
+    // Esperar un poco más antes del primer intento
+    setTimeout(() => {
+      tryReconnect();
+    }, 5000);
   };
 
   return (

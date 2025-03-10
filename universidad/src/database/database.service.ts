@@ -15,8 +15,7 @@ import { DatabaseModule } from './database.module';
 @Injectable()
 export class DatabaseService {
 
-  private entityMap = {
-    'tipos_ambientes': Tipos_ambientes,
+  private entityMap = {'tipos_ambientes': Tipos_ambientes,
     'tramites_documentos': Tramites_documentos,
     'sexos': Sexos,
   };
@@ -451,39 +450,67 @@ export class ${entityName}Module {}
 
   async restartApplication(): Promise<{ message: string }> {
     const isWindows = process.platform === 'win32';
-    console.log('Llegue a restartApplication...');
+    console.log('Iniciando proceso de reinicio...');
+    
     const scriptPath = path.join(process.cwd(), 'restart.js');
-
-    // Crear un script de reinicio si no existe
-    if (!fs.existsSync(scriptPath)) {
-      const restartScript = `
-        const { spawn } = require('child_process');
-        const path = require('path');
-        
-        // Esperar 1 segundo para asegurarse de que el proceso padre haya completado la respuesta
-        setTimeout(() => {
-          console.log('Reiniciando aplicación...');
-          // Iniciar el nuevo proceso
-          const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-          const child = spawn(npm, ['run', 'start'], {
-            detached: true,
-            stdio: 'inherit',
-            cwd: process.cwd()
-          });
-          
-          child.unref();
-          // Terminar el proceso actual después de iniciar el nuevo
-          setTimeout(() => process.exit(0), 1000);
-        }, 1000);
-      `;
-
-      fs.writeFileSync(scriptPath, restartScript);
+  
+    // Crear un script de reinicio mejorado
+    const restartScript = `const { spawn } = require('child_process');
+  const path = require('path');
+  const fs = require('fs');
+  
+  // Registrar el inicio del script
+  fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Iniciando reinicio...\\n\`);
+  
+  // Función para determinar la ruta del proyecto
+  function getProjectPath() {
+    // Intentar encontrar package.json para confirmar que estamos en la raíz del proyecto
+    let currentDir = __dirname;
+    while (!fs.existsSync(path.join(currentDir, 'package.json'))) {
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        // Llegamos a la raíz del sistema sin encontrar package.json
+        fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Error: No se pudo encontrar package.json\\n\`);
+        return __dirname; // Usar __dirname como fallback
+      }
+      currentDir = parentDir;
     }
-
-    console.log('Preparando reinicio de aplicación...');
-
-    // Ejecutar el script de reinicio en un proceso separado
+    return currentDir;
+  }
+  
+  const projectPath = getProjectPath();
+  fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Ruta del proyecto: \${projectPath}\\n\`);
+  
+  // Esperar unos segundos antes de reiniciar
+  setTimeout(() => {
+    fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Ejecutando npm run start en \${projectPath}\\n\`);
+    
+    // Usar spawn en lugar de exec para mejor manejo del proceso
+    const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const child = spawn(command, ['run', 'start'], {
+      cwd: projectPath,
+      detached: true, // Permitir que el proceso continúe independientemente
+      stdio: ['ignore', 
+        fs.openSync(path.join(projectPath, 'restart-stdout.log'), 'a'),
+        fs.openSync(path.join(projectPath, 'restart-stderr.log'), 'a')
+      ]
+    });
+    
+    // No esperar por el proceso hijo
+    child.unref();
+    
+    fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Proceso de reinicio iniciado con PID: \${child.pid}\\n\`);
+  }, 3000);
+  
+  fs.appendFileSync('restart.log', \`[\${new Date().toISOString()}] Preparando reinicio...\\n\`);`;
+  
+    fs.writeFileSync(scriptPath, restartScript);
+    console.log('Script de reinicio generado:', scriptPath);
+  
+    // Ejecutar el script en un proceso separado
     const command = isWindows ? 'node.exe' : 'node';
+    console.log(`Ejecutando: ${command} "${scriptPath}"`);
+    
     const child = exec(`${command} "${scriptPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error al iniciar script de reinicio: ${error.message}`);
@@ -493,12 +520,19 @@ export class ${entityName}Module {}
         console.error(`Error en stderr: ${stderr}`);
         return;
       }
-      console.log(stdout);
+      console.log('Salida del script de reinicio:', stdout);
     });
-
+  
     // No esperar a que el proceso termine
     child.unref();
-
-    return { message: 'La aplicación se reiniciará en unos momentos...' };
+  
+    // Cerrar el proceso actual después de un breve retardo
+    console.log('Programando cierre del proceso actual...');
+    setTimeout(() => {
+      console.log('Cerrando proceso actual para permitir reinicio...');
+      process.exit(0);
+    }, 2000);
+  
+    return { message: 'La aplicación se reiniciará en unos momentos. Por favor, espere...' };
   }
 }

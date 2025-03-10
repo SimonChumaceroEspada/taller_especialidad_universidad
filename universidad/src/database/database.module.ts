@@ -11,13 +11,16 @@ import { Tramites_documentosController } from '../controllers/tramites_documento
 import { Sexos } from '../entities/sexos.entity';
 import { SexosService } from '../services/sexos.service';
 import { SexosController } from '../controllers/sexos.controller';
+import { Sedes } from '../entities/sedes.entity';
+import { SedesService } from '../services/sedes.service';
+import { SedesController } from '../controllers/sedes.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tipos_ambientes, Tramites_documentos, Sexos,
+    TypeOrmModule.forFeature([Tipos_ambientes, Tramites_documentos, Sexos, Sedes,
 ])],
   providers: [
-    DatabaseService, Tipos_ambientesService, Tipos_ambientesController, Tramites_documentosService, Tramites_documentosController, SexosService, SexosController,
+    DatabaseService, Tipos_ambientesService, Tipos_ambientesController, Tramites_documentosService, Tramites_documentosController, SexosService, SexosController, SedesService, SedesController,
 ],
   controllers: [DatabaseController],
   exports: [DatabaseService],
