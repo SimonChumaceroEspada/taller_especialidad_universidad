@@ -48,7 +48,16 @@ export class DatabaseService {
 
   async getTableData(tableName: string) {
     const query = `SELECT * FROM "${tableName}" LIMIT 100`;
-    return await this.entityManager.query(query);
+    const data = await this.entityManager.query(query);
+    if (data.length === 0) {
+      // Si la tabla está vacía, devolver un objeto con las columnas de la tabla
+      const columns = await this.getTableStructure(tableName);
+      return [columns.reduce((acc, column) => {
+        acc[column.column_name] = '';
+        return acc;
+      }, {})];
+    }
+    return data;
   }
 
   async createCrudOperations(tables: string[]) {

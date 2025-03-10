@@ -360,28 +360,23 @@ export default function Dashboard() {
                 handleCreateRecord();
               }}
             >
-              {tableData.length > 0 &&
-                Object.keys(tableData[0]).map((key) => (
-                  <div key={key} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {key}
-                    </label>
-                    <input
-                      type="text"
-                      value={newRecord[key] || ""}
-                      onChange={(e) =>
-                        setNewRecord({ ...newRecord, [key]: e.target.value })
-                      }
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                ))}
-              <button
-                type="submit"
-                className="bg-green-500 text-white py-2 px-4 rounded"
-              >
-                Crear
-              </button>
+              {tableData.length > 0
+                ? Object.keys(tableData[0]).map((key) => (
+                    <div key={key} className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {key}
+                      </label>
+                      <input
+                        type="text"
+                        value={newRecord[key] || ""}
+                        onChange={(e) =>
+                          setNewRecord({ ...newRecord, [key]: e.target.value })
+                        }
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                  ))
+                : null}
             </form>
           </div>
         )}
