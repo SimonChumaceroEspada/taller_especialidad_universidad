@@ -1,4 +1,3 @@
-import { Sedes } from '../entities/sedes.entity';
 import { Sexos } from '../entities/sexos.entity';
 import { Tramites_documentos } from '../entities/tramites_documentos.entity';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
@@ -19,7 +18,6 @@ export class DatabaseService {
   private entityMap = {'tipos_ambientes': Tipos_ambientes,
     'tramites_documentos': Tramites_documentos,
     'sexos': Sexos,
-    'sedes': Sedes
   };
   constructor(
     @InjectEntityManager()

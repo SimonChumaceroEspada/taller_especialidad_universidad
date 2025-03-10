@@ -377,6 +377,12 @@ export default function Dashboard() {
                     </div>
                   ))
                 : null}
+              <button
+                type="submit"
+                className="bg-green-500 text-white py-2 px-4 rounded"
+              >
+                Crear
+              </button>
             </form>
           </div>
         )}
