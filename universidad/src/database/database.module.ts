@@ -5,22 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
 import { Tipos_ambientesService } from '../services/tipos_ambientes.service';
 import { Tipos_ambientesController } from '../controllers/tipos_ambientes.controller';
-import { Tramites_documentos } from '../entities/tramites_documentos.entity';
-import { Tramites_documentosService } from '../services/tramites_documentos.service';
-import { Tramites_documentosController } from '../controllers/tramites_documentos.controller';
-import { Sexos } from '../entities/sexos.entity';
-import { SexosService } from '../services/sexos.service';
-import { SexosController } from '../controllers/sexos.controller';
-import { Sedes } from '../entities/sedes.entity';
-import { SedesService } from '../services/sedes.service';
-import { SedesController } from '../controllers/sedes.controller';
+
+
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tipos_ambientes, Tramites_documentos, Sexos, Sedes,
+    TypeOrmModule.forFeature([Tipos_ambientes,
 ])],
   providers: [
-    DatabaseService, Tipos_ambientesService, Tipos_ambientesController, Tramites_documentosService, Tramites_documentosController, SexosService, SexosController, SedesService, SedesController,
+    DatabaseService, Tipos_ambientesService, Tipos_ambientesController,
 ],
   controllers: [DatabaseController],
   exports: [DatabaseService],
