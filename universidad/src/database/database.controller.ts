@@ -37,4 +37,9 @@ export class DatabaseController {
   async deleteRecord(@Param('name') tableName: string, @Param('id') id: string) {
     return await this.databaseService.deleteRecord(tableName, id);
   }
+
+  @Post('restart')
+  async restartApplication() {
+    return this.databaseService.restartApplication();
+  }
 }

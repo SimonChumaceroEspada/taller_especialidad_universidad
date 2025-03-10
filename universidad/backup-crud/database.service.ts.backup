@@ -84,7 +84,11 @@ export class DatabaseService {
       await this.updateEntityMap(tables);
       console.log('✅ Actualizado entityMap en database.service.ts');
 
-      return { message: 'Operaciones CRUD creadas con éxito. Por favor, reinicie la aplicación.' };
+      // Reiniciar la aplicación
+      await this.restartApplication();
+      console.log('✅ Aplicación reiniciada con éxito');
+
+      return { message: 'Operaciones CRUD creadas con éxito. La aplicación se está reiniciando.' };
     } catch (error) {
       console.error('❌ Error al generar CRUD:', error);
       this.restoreBackup();

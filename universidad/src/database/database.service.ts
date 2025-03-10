@@ -8,14 +8,15 @@ import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
-import { Universidades } from '../entities/universidades.entity'; 
+import { Universidades } from '../entities/universidades.entity';
 import { DatabaseModule } from './database.module';
 
 
 @Injectable()
 export class DatabaseService {
 
-  private entityMap = {'tipos_ambientes': Tipos_ambientes,
+  private entityMap = {
+    'tipos_ambientes': Tipos_ambientes,
     'tramites_documentos': Tramites_documentos,
     'sexos': Sexos,
   };
@@ -62,10 +63,10 @@ export class DatabaseService {
 
   async createCrudOperations(tables: string[]) {
     console.log('⏳ Generando archivos CRUD para las tablas...');
-    
+
     // Crear una carpeta de respaldo para poder restaurar en caso de error
     this.createBackup();
-    
+
     try {
       for (const table of tables) {
         // Crear archivos de entidad, controlador, servicio y módulo para la tabla
@@ -101,15 +102,15 @@ export class DatabaseService {
     // Hacer copia de los archivos críticos
     const databaseServicePath = path.join(process.cwd(), 'src', 'database', 'database.service.ts');
     const databaseModulePath = path.join(process.cwd(), 'src', 'database', 'database.module.ts');
-    
+
     if (fs.existsSync(databaseServicePath)) {
       fs.copyFileSync(databaseServicePath, path.join(backupDir, 'database.service.ts.backup'));
     }
-    
+
     if (fs.existsSync(databaseModulePath)) {
       fs.copyFileSync(databaseModulePath, path.join(backupDir, 'database.module.ts.backup'));
     }
-    
+
     console.log('✅ Backup creado en directorio "backup-crud"');
   }
 
@@ -117,15 +118,15 @@ export class DatabaseService {
     const backupDir = path.join(process.cwd(), 'backup-crud');
     const databaseServicePath = path.join(process.cwd(), 'src', 'database', 'database.service.ts');
     const databaseModulePath = path.join(process.cwd(), 'src', 'database', 'database.module.ts');
-    
+
     if (fs.existsSync(path.join(backupDir, 'database.service.ts.backup'))) {
       fs.copyFileSync(path.join(backupDir, 'database.service.ts.backup'), databaseServicePath);
     }
-    
+
     if (fs.existsSync(path.join(backupDir, 'database.module.ts.backup'))) {
       fs.copyFileSync(path.join(backupDir, 'database.module.ts.backup'), databaseModulePath);
     }
-    
+
     console.log('⚠️ Se han restaurado los archivos originales del backup');
   }
 
@@ -315,53 +316,53 @@ export class ${entityName}Module {}
     // Filtrar tablas que ya están en entityMap
     const newTables = tables.filter(table => !this.entityMap[table]);
     if (newTables.length === 0) return;
-  
+
     const entityMapPath = path.join(process.cwd(), 'src', 'database', 'database.service.ts');
     let entityMapContent = fs.readFileSync(entityMapPath, 'utf8');
-  
+
     // Crear las declaraciones de importación para las nuevas entidades
     const importStatements = newTables.map(table => {
       const entityName = this.capitalize(table);
       return `import { ${entityName} } from '../entities/${table}.entity';`;
     }).join('\n');
-  
+
     // Crear las entradas del mapa de entidades para las nuevas tablas
     const entityMapEntries = newTables.map(table => {
       const entityName = this.capitalize(table);
       return `'${table}': ${entityName}`;
     }).join(',\n    ');
-  
+
     // Insertar las nuevas importaciones al principio del archivo
     entityMapContent = importStatements + '\n' + entityMapContent;
-  
+
     // Actualizar el mapa de entidades
     const entityMapRegex = /(private\s+entityMap\s+=\s+{)([\s\S]*?)(})/;
     const match = entityMapContent.match(entityMapRegex);
-    
+
     if (match) {
       // Verificar si las entradas ya existen para evitar duplicados
       const existingEntries = match[2];
       const updatedEntries = existingEntries.trim();
-      
+
       // Añadir las nuevas entradas asegurándose de que el formato sea consistente
       const separator = updatedEntries.endsWith(',') ? '\n    ' : ',\n    ';
-      
+
       entityMapContent = entityMapContent.replace(
         entityMapRegex,
         `$1${updatedEntries}${separator}${entityMapEntries}\n  $3`
       );
     }
-  
+
     // Guardar los cambios en el archivo
     fs.writeFileSync(entityMapPath, entityMapContent);
     console.log(`✅ Se han añadido ${newTables.length} nuevas entidades al entityMap`);
-  
+
     // Actualizar el entityMap en memoria
     for (const table of newTables) {
       try {
         const entityName = this.capitalize(table);
         console.log(`✅ Registrando ${entityName} en memoria`);
-        
+
         // Registrar en el mapa de entidades en memoria
         // La entidad real se cargará después del reinicio
         const entityModule = await import(`../entities/${table}.entity`);
@@ -447,22 +448,57 @@ export class ${entityName}Module {}
     return await this.entityManager.delete(tableName, id);
   }
 
+
   async restartApplication(): Promise<{ message: string }> {
-    return new Promise((resolve, reject) => {
-      exec('npm run start', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error al reiniciar: ${error.message}`);
-          reject({ message: `Error al reiniciar: ${error.message}` });
-          return;
-        }
-        if (stderr) {
-          console.error(`Error en stderr: ${stderr}`);
-          reject({ message: `Error en stderr: ${stderr}` });
-          return;
-        }
-        console.log(stdout);
-        resolve({ message: 'Aplicación reiniciada con éxito' });
-      });
+    const isWindows = process.platform === 'win32';
+    console.log('Llegue a restartApplication...');
+    const scriptPath = path.join(process.cwd(), 'restart.js');
+
+    // Crear un script de reinicio si no existe
+    if (!fs.existsSync(scriptPath)) {
+      const restartScript = `
+        const { spawn } = require('child_process');
+        const path = require('path');
+        
+        // Esperar 1 segundo para asegurarse de que el proceso padre haya completado la respuesta
+        setTimeout(() => {
+          console.log('Reiniciando aplicación...');
+          // Iniciar el nuevo proceso
+          const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+          const child = spawn(npm, ['run', 'start'], {
+            detached: true,
+            stdio: 'inherit',
+            cwd: process.cwd()
+          });
+          
+          child.unref();
+          // Terminar el proceso actual después de iniciar el nuevo
+          setTimeout(() => process.exit(0), 1000);
+        }, 1000);
+      `;
+
+      fs.writeFileSync(scriptPath, restartScript);
+    }
+
+    console.log('Preparando reinicio de aplicación...');
+
+    // Ejecutar el script de reinicio en un proceso separado
+    const command = isWindows ? 'node.exe' : 'node';
+    const child = exec(`${command} "${scriptPath}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error al iniciar script de reinicio: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.error(`Error en stderr: ${stderr}`);
+        return;
+      }
+      console.log(stdout);
     });
+
+    // No esperar a que el proceso termine
+    child.unref();
+
+    return { message: 'La aplicación se reiniciará en unos momentos...' };
   }
 }

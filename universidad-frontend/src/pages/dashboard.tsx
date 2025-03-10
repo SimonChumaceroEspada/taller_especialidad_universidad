@@ -244,13 +244,54 @@ export default function Dashboard() {
           },
         }
       );
+      
       alert(response.data.message);
+      
+      // Esperar 5 segundos y luego intentar reconectar
+      setTimeout(() => {
+        reconnectAfterRestart();
+      }, 5000);
+      
     } catch (error) {
       console.error("Error al reiniciar la aplicación:", error);
       alert("Error al reiniciar la aplicación");
-    } finally {
       setLoading(false);
     }
+  };
+  
+  // Función para reconectar después del reinicio
+  const reconnectAfterRestart = async () => {
+    let attempts = 0;
+    const maxAttempts = 10;
+    const attemptInterval = 2000; // 2 segundos entre intentos
+    
+    const tryReconnect = async () => {
+      attempts++;
+      try {
+        // Intentar una solicitud simple para verificar si el servidor está activo
+        await axios.get("http://localhost:4000/health");
+        
+        // Si llegamos aquí, el servidor está de vuelta
+        console.log("Reconexión exitosa después del reinicio");
+        setLoading(false);
+        fetchTables(); // Refrescar los datos
+        
+      } catch (error) {
+        console.log(`Intento de reconexión ${attempts}/${maxAttempts} fallido`);
+        
+        if (attempts < maxAttempts) {
+          // Programar otro intento
+          setTimeout(tryReconnect, attemptInterval);
+        } else {
+          // Demasiados intentos fallidos
+          setLoading(false);
+          alert("No se pudo reconectar con el servidor después del reinicio. Por favor, actualice la página manualmente.");
+        }
+      }
+    };
+    
+    // Iniciar el primer intento
+    tryReconnect();
   };
 
   return (
