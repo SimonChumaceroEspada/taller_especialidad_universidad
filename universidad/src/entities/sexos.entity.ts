@@ -1,11 +1,11 @@
 import { Entity, Column, PrimaryColumn } from 'typeorm';
 
-@Entity('tipos_ambientes')
-export class Tipos_ambientes {
+@Entity('sexos')
+export class Sexos {
 
   
   @PrimaryColumn()
-  id_tipo_ambiente: number;
+  id_sexo: number;
   
   @Column({ nullable: true })
   nombre: string;

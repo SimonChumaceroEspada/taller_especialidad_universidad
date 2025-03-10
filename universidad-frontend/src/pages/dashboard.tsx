@@ -231,6 +231,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleRestartApplication = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.post(
+        "http://localhost:4000/database/restart",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert(response.data.message);
+    } catch (error) {
+      console.error("Error al reiniciar la aplicación:", error);
+      alert("Error al reiniciar la aplicación");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
@@ -270,6 +292,12 @@ export default function Dashboard() {
             className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
           >
             Realizar operaciones CRUD
+          </button>
+          <button
+            onClick={handleRestartApplication}
+            className="mt-4 bg-green-500 text-white py-2 px-4 rounded"
+          >
+            Reiniciar aplicación
           </button>
         </div>
 

@@ -1,11 +1,13 @@
+import { Sexos } from '../entities/sexos.entity';
 import { Tramites_documentos } from '../entities/tramites_documentos.entity';
+import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
+
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
-import { Tipos_ambientes } from '../entities/tipos_ambientes.entity'; 
 import { Universidades } from '../entities/universidades.entity'; 
 import { DatabaseModule } from './database.module';
 
@@ -14,8 +16,8 @@ import { DatabaseModule } from './database.module';
 export class DatabaseService {
 
   private entityMap = {'tipos_ambientes': Tipos_ambientes,
-    'universidades': Universidades,
-    'tramites_documentos': Tramites_documentos
+    'tramites_documentos': Tramites_documentos,
+    'sexos': Sexos
   };
   constructor(
     @InjectEntityManager()
@@ -73,10 +75,7 @@ export class DatabaseService {
       await this.updateEntityMap(tables);
       console.log('✅ Actualizado entityMap en database.service.ts');
 
-      // Detener la aplicación actual y reiniciarla
-      this.shutdownAndRestart();
-      
-      return { message: 'Operaciones CRUD creadas con éxito. La aplicación se reiniciará automáticamente.' };
+      return { message: 'Operaciones CRUD creadas con éxito. Por favor, reinicie la aplicación.' };
     } catch (error) {
       console.error('❌ Error al generar CRUD:', error);
       this.restoreBackup();
@@ -119,73 +118,6 @@ export class DatabaseService {
     }
     
     console.log('⚠️ Se han restaurado los archivos originales del backup');
-  }
-
-  private shutdownAndRestart() {
-    // Mostrar mensaje en consola
-    console.log('\n==================================================');
-    console.log('🚀 GENERACIÓN DE CRUD COMPLETADA CON ÉXITO');
-    console.log('📝 Se han creado todos los archivos necesarios');
-    console.log('🔄 La aplicación se reiniciará automáticamente');
-    console.log('==================================================\n');
-    
-    // Detener el proceso actual con un retardo para permitir responder la petición HTTP
-    setTimeout(() => {
-      // Guardar la ruta actual para el reinicio
-      const currentDir = process.cwd();
-      
-      // Crear un script de reinicio
-      const restartScriptPath = path.join(currentDir, 'restart.js');
-      const restartScriptContent = `
-const { exec } = require('child_process');
-const path = require('path');
-
-// Esperar unos segundos antes de reiniciar
-setTimeout(() => {
-  console.log('🔄 Reiniciando aplicación...');
-  
-  // Usar el proceso hijo para ejecutar npm run start
-  const child = exec('npm run start', {
-    cwd: '${currentDir.replace(/\\/g, '\\\\')}'
-  });
-  
-  child.stdout.on('data', (data) => {
-    console.log(data);
-  });
-  
-  child.stderr.on('data', (data) => {
-    console.error(data);
-  });
-  
-  child.on('close', (code) => {
-    if (code !== 0) {
-      console.log('⚠️ El proceso ha terminado con código: ' + code);
-    } else {
-      console.log('✅ Aplicación reiniciada correctamente');
-    }
-  });
-}, 3000);
-
-console.log('⏳ Preparando reinicio...');
-      `;
-      
-      fs.writeFileSync(restartScriptPath, restartScriptContent);
-      
-      // Ejecutar el script de reinicio como un proceso independiente
-      const { spawn } = require('child_process');
-      const detached = spawn('node', [restartScriptPath], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true
-      });
-      detached.unref();
-      
-      // Mostrar un último mensaje antes de terminar
-      console.log('📣 Finalizando proceso actual para reiniciar...');
-      setTimeout(() => {
-        process.exit(0);
-      }, 1000);
-    }, 2000);
   }
 
   private async createEntityFile(tableName: string) {
@@ -423,7 +355,8 @@ export class ${entityName}Module {}
         
         // Registrar en el mapa de entidades en memoria
         // La entidad real se cargará después del reinicio
-        this.registerEntity(table, {});
+        const entityModule = await import(`../entities/${table}.entity`);
+        this.registerEntity(table, entityModule[entityName]);
       } catch (error) {
         console.error(`Error registrando entidad ${table}:`, error);
       }
@@ -503,5 +436,24 @@ export class ${entityName}Module {}
 
   async deleteRecord(tableName: string, id: string) {
     return await this.entityManager.delete(tableName, id);
+  }
+
+  async restartApplication(): Promise<{ message: string }> {
+    return new Promise((resolve, reject) => {
+      exec('npm run start', (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error al reiniciar: ${error.message}`);
+          reject({ message: `Error al reiniciar: ${error.message}` });
+          return;
+        }
+        if (stderr) {
+          console.error(`Error en stderr: ${stderr}`);
+          reject({ message: `Error en stderr: ${stderr}` });
+          return;
+        }
+        console.log(stdout);
+        resolve({ message: 'Aplicación reiniciada con éxito' });
+      });
+    });
   }
 }
