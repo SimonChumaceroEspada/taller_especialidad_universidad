@@ -1,24 +1,17 @@
-import { Sexos } from '../entities/sexos.entity';
-import { Tramites_documentos } from '../entities/tramites_documentos.entity';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
-
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
-import { Universidades } from '../entities/universidades.entity';
-import { DatabaseModule } from './database.module';
+
 
 
 @Injectable()
 export class DatabaseService {
 
-  private entityMap = {
-    'tipos_ambientes': Tipos_ambientes,
-    'tramites_documentos': Tramites_documentos,
-    'sexos': Sexos,
+  private entityMap = {'tipos_ambientes': Tipos_ambientes,
   };
   constructor(
     @InjectEntityManager()
