@@ -310,179 +310,268 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-4">Panel de Administración</h1>
 
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-bold mb-4">Tablas</h2>
-          <div className="flex items-center mb-4">
-            <input
-              type="checkbox"
-              checked={selectAll}
-              onChange={handleSelectAllChange}
-              className="mr-2"
-            />
-            <label>Seleccionar todas</label>
-          </div>
-          <ul>
-            {tables.map((table) => (
-              <li key={table} className="mb-2">
+        {/* Tables grid section */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4 border-b pb-4">
+              <h2 className="text-2xl font-bold text-gray-700">Tablas disponibles</h2>
+              <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={selectedTables[table] || false}
-                  onChange={() => handleCheckboxChange(table)}
-                  className="mr-2"
+                  checked={selectAll}
+                  onChange={handleSelectAllChange}
+                  className="w-4 h-4 accent-blue-500"
+                  id="select-all"
                 />
-                <button
-                  onClick={() => handleTableSelect(table)}
-                  className="text-blue-500 underline"
-                >
-                  {table}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={handleCrudOperations}
-            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
-          >
-            Realizar operaciones CRUD
-          </button>
-          <button
-            onClick={handleRestartApplication}
-            className="mt-4 bg-green-500 text-white py-2 px-4 rounded"
-          >
-            Reiniciar aplicación
-          </button>
-        </div>
-
-        {selectedTable && (
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-bold mb-4">
-              Datos de la tabla: {selectedTable}
-            </h2>
-            {loading ? (
-              <p>Cargando datos...</p>
-            ) : (
+                <label htmlFor="select-all" className="text-gray-700 font-medium">Seleccionar todas</label>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
               <table className="min-w-full bg-white">
-                <thead>
+                <thead className="bg-gray-100">
                   <tr>
-                    {tableData.length > 0 &&
-                      Object.keys(tableData[0]).map((key) => (
-                        <th key={key} className="py-2 px-4 border-b">
-                          {key}
-                        </th>
-                      ))}
-                    <th className="py-2 px-4 border-b">Acciones</th>
+                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700 w-10">#</th>
+                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700 w-12">Seleccionar</th>
+                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700">Nombre de la tabla</th>
+                    <th className="py-2 px-3 text-left text-sm font-semibold text-gray-700 w-20">Acción</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {tableData.map((record) => (
-                    <tr key={record.id}>
-                      {Object.keys(record).map((key) => (
-                        <td key={key} className="py-2 px-4 border-b">
-                          {record[key]}
-                        </td>
-                      ))}
-                      <td className="py-2 px-4 border-b">
+                <tbody className="divide-y divide-gray-200">
+                  {tables.map((table, index) => (
+                    <tr 
+                      key={table}
+                      className={`${
+                        selectedTable === table ? "bg-blue-50" : index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-blue-50 transition-colors duration-150`}
+                    >
+                      <td className="py-2 px-3 text-sm text-gray-500">{index + 1}</td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedTables[table] || false}
+                          onChange={() => handleCheckboxChange(table)}
+                          className="w-4 h-4 accent-blue-500"
+                        />
+                      </td>
+                      <td className="py-2 px-3 font-medium text-gray-800">{table}</td>
+                      <td className="py-2 px-3">
                         <button
-                          onClick={() => setEditingRecord(record)}
-                          className="text-blue-500 underline mr-2"
+                          onClick={() => handleTableSelect(table)}
+                          className={`px-3 py-1 text-sm font-medium rounded ${
+                            selectedTable === table 
+                              ? "bg-blue-600 text-white" 
+                              : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                          }`}
                         >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRecord(record)}
-                          className="text-red-500 underline"
-                        >
-                          Eliminar
+                          Ver
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            )}
+            </div>
+            
+            <div className="mt-6 flex justify-between items-center border-t pt-4">
+              <div className="text-sm text-gray-500">
+                {tables.length} tablas encontradas
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleCrudOperations}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  Operaciones CRUD
+                </button>
+                <button
+                  onClick={handleRestartApplication}
+                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reiniciar aplicación
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
+        {/* Table data and forms */}
         {selectedTable && (
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-bold mb-4">Crear nuevo registro</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleCreateRecord();
-              }}
-            >
-              {tableData.length > 0
-                ? Object.keys(tableData[0]).map((key) => (
-                    <div key={key} className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700">
-                        {key}
-                      </label>
-                      <input
-                        type="text"
-                        value={newRecord[key] || ""}
-                        onChange={(e) =>
-                          setNewRecord({ ...newRecord, [key]: e.target.value })
-                        }
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                    </div>
-                  ))
-                : null}
-              <button
-                type="submit"
-                className="bg-green-500 text-white py-2 px-4 rounded"
-              >
-                Crear
-              </button>
-            </form>
-          </div>
-        )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold mb-6 text-gray-700 border-b pb-2">
+                  Datos de la tabla: <span className="text-blue-600">{selectedTable}</span>
+                </h2>
+                {loading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                      <thead className="bg-gray-800 text-white">
+                        <tr>
+                          {tableData.length > 0 &&
+                            Object.keys(tableData[0]).map((key) => (
+                              <th key={key} className="py-3 px-4 text-left text-lg font-semibold uppercase tracking-wider">
+                                {key}
+                              </th>
+                            ))}
+                          <th className="py-3 px-4 text-left text-lg font-semibold uppercase tracking-wider">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {tableData.map((record, index) => (
+                          <tr 
+                            key={index} 
+                            className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                          >
+                            {Object.keys(record).map((key) => (
+                              <td key={key} className="py-3 px-4 text-gray-700 text-base">
+                                {record[key]}
+                              </td>
+                            ))}
+                            <td className="py-3 px-4 flex space-x-3">
+                              <button
+                                onClick={() => setEditingRecord(record)}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-base transition-colors"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRecord(record)}
+                                className="text-red-600 hover:text-red-800 font-medium text-base transition-colors"
+                              >
+                                Eliminar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
 
-        {editingRecord && (
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-bold mb-4">Editar registro</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleEditRecord();
-              }}
-            >
-              {Object.keys(editingRecord).map((key) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {key}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingRecord[key] || ""}
-                    onChange={(e) =>
-                      setEditingRecord({
-                        ...editingRecord,
-                        [key]: e.target.value,
-                      })
-                    }
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold mb-6 text-gray-700 border-b pb-2">Crear nuevo registro</h2>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreateRecord();
+                  }}
+                  className="space-y-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {tableData.length > 0
+                      ? Object.keys(tableData[0]).map((key) => (
+                          <div key={key} className="mb-0">
+                            <label className="block text-base font-medium text-gray-700 mb-1">
+                              {key}
+                            </label>
+                            <input
+                              type="text"
+                              value={newRecord[key] || ""}
+                              onChange={(e) =>
+                                setNewRecord({ ...newRecord, [key]: e.target.value })
+                              }
+                              className="w-full px-4 py-3 border text-base border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            />
+                          </div>
+                        ))
+                      : null}
+                  </div>
+                  <button
+                    type="submit"
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white py-3 px-6 text-base font-medium rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  >
+                    Crear Registro
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div className="lg:col-span-1">
+              {editingRecord && (
+                <div className="bg-white rounded-lg shadow-lg p-6 sticky top-6">
+                  <h2 className="text-2xl font-bold mb-6 text-gray-700 border-b pb-2">Editar registro</h2>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleEditRecord();
+                    }}
+                    className="space-y-6"
+                  >
+                    <div className="space-y-4">
+                      {Object.keys(editingRecord).map((key) => (
+                        <div key={key} className="mb-0">
+                          <label className="block text-base font-medium text-gray-700 mb-1">
+                            {key}
+                          </label>
+                          <input
+                            type="text"
+                            value={editingRecord[key] || ""}
+                            onChange={(e) =>
+                              setEditingRecord({
+                                ...editingRecord,
+                                [key]: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 border text-base border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                      <button
+                        type="submit"
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-6 text-base font-medium rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+                      >
+                        Guardar cambios
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingRecord(null)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 text-base font-medium rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              ))}
-              <button
-                type="submit"
-                className="bg-yellow-500 text-white py-2 px-4 rounded"
-              >
-                Guardar cambios
-              </button>
-              <button
-                onClick={() => setEditingRecord(null)}
-                className="ml-2 bg-gray-500 text-white py-2 px-4 rounded"
-              >
-                Cancelar
-              </button>
-            </form>
+              )}
+              {!editingRecord && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-2xl font-bold mb-4 text-gray-700">Ayuda</h2>
+                  <div className="text-gray-600 space-y-4">
+                    <p>Seleccione una tabla de la lista para ver su contenido.</p>
+                    <p>Puede crear nuevos registros usando el formulario de la izquierda.</p>
+                    <p>Para editar un registro, haga clic en el botón "Editar" junto al registro deseado.</p>
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mt-4">
+                      <h3 className="font-semibold text-blue-800 mb-2">Acciones rápidas</h3>
+                      <ul className="list-disc pl-5 space-y-1 text-blue-700">
+                        <li>Haga clic en "Ver" para examinar una tabla</li>
+                        <li>Seleccione varias tablas para operaciones CRUD</li>
+                        <li>Use el botón de reinicio cuando sea necesario</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
