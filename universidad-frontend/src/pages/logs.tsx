@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import LogsViewer from "../components/LogsViewer";
+import LogTable from "../components/LogTable";
+import EncryptedLogTable from "../components/EncryptedLogTable";
 
 export default function Logs() {
   const [activeTab, setActiveTab] = useState<'regular' | 'encrypted'>('regular');
@@ -57,9 +59,9 @@ export default function Logs() {
         </div>
 
         {activeTab === 'regular' ? (
-          <LogsViewer type="regular" limit={100} refreshInterval={3000} />
+          <LogTable limit={100} refreshInterval={3000} />
         ) : (
-          <LogsViewer type="encrypted" limit={100} refreshInterval={5000} />
+          <EncryptedLogTable limit={100} refreshInterval={5000} />
         )}
 
         <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
