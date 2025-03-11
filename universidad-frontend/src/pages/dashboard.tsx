@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios, { AxiosError } from "axios";
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const [tables, setTables] = useState<string[]>([]);
@@ -12,6 +13,8 @@ export default function Dashboard() {
   const [selectAll, setSelectAll] = useState(false);
   const [newRecord, setNewRecord] = useState<any>({});
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -312,7 +315,18 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-4">Panel de Administración</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold mb-8 text-gray-800 border-b pb-4">Panel de Administración</h1>
+          <button
+            onClick={() => navigate('/logs')}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 flex items-center mb-8"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Ver Logs del Sistema
+          </button>
+        </div>
 
         {/* Tables grid section */}
         <div className="mb-8">
