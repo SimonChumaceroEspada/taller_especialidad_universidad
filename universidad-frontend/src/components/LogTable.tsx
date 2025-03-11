@@ -11,7 +11,7 @@ const LogTable: React.FC<LogTableProps> = ({
   limit = 100,
   refreshInterval = 3000 
 }) => {
-  const [lastChecked, setLastChecked] = useState<number>(Date.now());
+  const [lastId, setLastId] = useState<number>(0);
   const [updateTrigger, setUpdateTrigger] = useState<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -21,8 +21,9 @@ const LogTable: React.FC<LogTableProps> = ({
       const token = localStorage.getItem("access_token");
       if (!token) return;
       
+      // First get the latest log ID to compare with our lastId
       const response = await axios.get(
-        `http://localhost:4000/logs/latest`,
+        `http://localhost:4000/logs/latest?limit=1`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -31,9 +32,11 @@ const LogTable: React.FC<LogTableProps> = ({
       );
       
       if (response.data && response.data.length > 0) {
-        // If new logs exist, update lastChecked and trigger re-render
-        if (response.data[0].date > lastChecked) {
-          setLastChecked(Date.now());
+        const latestLog = response.data[0];
+        // If we found a newer log with a higher ID
+        if (lastId === 0 || latestLog.id > lastId) {
+          console.log(`Found new logs! Last known ID: ${lastId}, Latest ID: ${latestLog.id}`);
+          setLastId(latestLog.id);
           setUpdateTrigger(prev => prev + 1);
         }
       }
@@ -42,11 +45,35 @@ const LogTable: React.FC<LogTableProps> = ({
     }
   };
   
+  // Initialize lastId on first render
+  useEffect(() => {
+    const getInitialId = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        
+        const response = await axios.get(
+          `http://localhost:4000/logs?limit=1`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        if (response.data && response.data.length > 0) {
+          setLastId(response.data[0].id);
+        }
+      } catch (error) {
+        console.error("Error getting initial log ID:", error);
+      }
+    };
+    
+    getInitialId();
+  }, []);
+  
   // Setup polling interval
   useEffect(() => {
-    // Initial check
-    checkForUpdates();
-    
     // Set up regular polling
     timerRef.current = setInterval(checkForUpdates, refreshInterval);
     
@@ -56,7 +83,7 @@ const LogTable: React.FC<LogTableProps> = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [refreshInterval]);
+  }, [refreshInterval, lastId]);
   
   return (
     <LogsViewer 
