@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseService } from './database.service';
 import { DatabaseController } from './database.controller';
-// import { DatabaseGateway } from './database.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tipos_ambientes } from '../entities/tipos_ambientes.entity';
 import { Tipos_ambientesService } from '../services/tipos_ambientes.service';
@@ -16,20 +15,15 @@ import { EncryptedLogTableController } from '../controllers/encrypted_log_table.
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Tipos_ambientes,
-      LogTable,
-      EncryptedLogTable,
-    ]),
+      Tipos_ambientes, LogTable, EncryptedLogTable,
+]),
   ],
   providers: [
-    DatabaseService, 
-    Tipos_ambientesService, 
-    Tipos_ambientesController,
-    LogTableService,
-    EncryptedLogTableService,
-  ],
+    DatabaseService, Tipos_ambientesService, LogTableService, EncryptedLogTableService,
+],
   controllers: [
     DatabaseController,
+    Tipos_ambientesController,
     LogTableController,
     EncryptedLogTableController,
   ],
