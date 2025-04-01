@@ -1,4 +1,4 @@
-﻿**Universidad - Guía de Instalación y Uso**
+﻿# Universidad - Guía de Instalación y Uso
 
 Este proyecto consiste en una aplicación de gestión para universidades con un backend en NestJS y un frontend en React.
 
@@ -57,9 +57,11 @@ npm install
 npm start
 ```
 
+**Deberá ver el login y ingresar con las credenciales predeterminadas "admin" y contraseña "123456":**
+
 ![Login](images/Aspose.Words.d5426d7a-188d-4892-885c-1139cf7634d0.004.png)
 
-**Deberá ver el login y ingresar con las credenciales predeterminadas "admin" y contraseña "123456":**
+
 
 Y luego tenemos acceso al Panel de Administración:
 ![Panel de administración](images/Aspose.Words.d5426d7a-188d-4892-885c-1139cf7634d0.005.png)
